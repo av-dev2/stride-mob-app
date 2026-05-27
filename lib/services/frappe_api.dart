@@ -7,22 +7,35 @@ import '../models/sales_invoice.dart';
 /// Frappe REST API client for Stride.
 ///
 /// Uses token-based auth: `Authorization: token api_key:api_secret`
+///
+/// When connecting from an Android emulator, the site hostname (e.g., 'rental')
+/// may not be resolvable. Use the host machine's IP address as the Site URL
+/// and optionally provide the original hostname so it's sent as a Host header
+/// for nginx routing.
 class FrappeApi {
   String? _siteUrl;
   String? _apiToken;
+  String? _hostHeader;
 
-  void configure({required String siteUrl, required String apiToken}) {
+  void configure({required String siteUrl, required String apiToken, String? hostHeader}) {
     _siteUrl = siteUrl.endsWith('/') ? siteUrl.substring(0, siteUrl.length - 1) : siteUrl;
     _apiToken = apiToken;
+    _hostHeader = hostHeader;
   }
 
   bool get isConfigured => _siteUrl != null && _apiToken != null;
 
-  Map<String, String> get _headers => {
-        'Authorization': 'token $_apiToken',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+  Map<String, String> get _headers {
+    final headers = <String, String>{
+      'Authorization': 'token $_apiToken',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (_hostHeader != null && _hostHeader!.isNotEmpty) {
+      headers['Host'] = _hostHeader!;
+    }
+    return headers;
+  }
 
   /// Test the connection to the Frappe site.
   Future<String> testConnection() async {
