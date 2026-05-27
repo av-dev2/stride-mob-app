@@ -17,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _urlController;
   late TextEditingController _tokenController;
+  late TextEditingController _hostnameController;
 
   @override
   void initState() {
@@ -24,12 +25,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final auth = context.read<AuthProvider>();
     _urlController = TextEditingController(text: auth.siteUrl);
     _tokenController = TextEditingController(text: auth.apiToken);
+    _hostnameController = TextEditingController(text: auth.siteHostname);
   }
 
   @override
   void dispose() {
     _urlController.dispose();
     _tokenController.dispose();
+    _hostnameController.dispose();
     super.dispose();
   }
 
@@ -98,10 +101,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     controller: _urlController,
                     decoration: const InputDecoration(
                       labelText: 'Site URL',
-                      hintText: 'https://your-site.frappe.cloud',
+                      hintText: 'http://192.168.0.90:8001',
                       prefixIcon: Icon(LucideIcons.globe, size: 18),
                     ),
                     onChanged: (v) => auth.updateSiteUrl(v),
+                  ),
+                  const SizedBox(height: 12),
+                  // Hostname field (for nginx routing)
+                  TextField(
+                    controller: _hostnameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Site Hostname (optional)',
+                      hintText: 'rental',
+                      prefixIcon: Icon(LucideIcons.server, size: 18),
+                    ),
+                    onChanged: (v) => auth.updateSiteHostname(v),
+                  ),
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      'Enter the Frappe site name if using IP address (e.g., rental)',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   // Token field
