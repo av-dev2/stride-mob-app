@@ -229,46 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 24),
 
-            // === Sync Settings ===
-            const SectionHeader(title: 'Sync Settings'),
-            Container(
-              decoration: AppTheme.tonalCardDecoration(
-                color: AppTheme.surfaceContainerLowest,
-              ),
-              child: Column(
-                children: [
-                  _SettingsToggle(
-                    icon: LucideIcons.smartphone,
-                    iconColor: AppTheme.secondary,
-                    title: 'Auto-Sync SMS',
-                    subtitle: 'Automatically capture payment messages',
-                    value: settings.autoSync,
-                    onChanged: settings.setAutoSync,
-                  ),
-                  Divider(height: 1, color: AppTheme.outlineVariant.withOpacity(0.2)),
-                  _SettingsToggle(
-                    icon: LucideIcons.arrowLeftRight,
-                    iconColor: AppTheme.primary,
-                    title: 'Auto-Reconcile',
-                    subtitle: 'Automatically match payments to invoices',
-                    value: settings.autoReconcile,
-                    onChanged: settings.setAutoReconcile,
-                  ),
-                  Divider(height: 1, color: AppTheme.outlineVariant.withOpacity(0.2)),
-                  _SettingsToggle(
-                    icon: LucideIcons.bell,
-                    iconColor: const Color(0xFF8B5CF6),
-                    title: 'Notifications',
-                    subtitle: 'Get notified about new payments',
-                    value: settings.notifications,
-                    onChanged: settings.setNotifications,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // === Data Management ===
+            // === Data Management (moved up for visibility) ===
             const SectionHeader(title: 'Data & Storage'),
             Container(
               decoration: AppTheme.tonalCardDecoration(
@@ -303,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Divider(height: 1, color: AppTheme.outlineVariant.withOpacity(0.2)),
                   _SettingsAction(
                     icon: LucideIcons.download,
-                    iconColor: AppTheme.secondary,
+                    iconColor: AppTheme.primary,
                     title: 'Export Data',
                     subtitle: 'Download payment logs as CSV',
                     onTap: () {},
@@ -313,8 +274,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: LucideIcons.trash2,
                     iconColor: AppTheme.error,
                     title: 'Clear Local Cache',
-                    subtitle: 'Remove cached data (settings will be preserved)',
+                    subtitle: 'Remove cached data (settings preserved)',
                     onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // === Sync Settings ===
+            const SectionHeader(title: 'Sync Settings'),
+            Container(
+              decoration: AppTheme.tonalCardDecoration(
+                color: AppTheme.surfaceContainerLowest,
+              ),
+              child: Column(
+                children: [
+                  _SettingsToggle(
+                    icon: LucideIcons.smartphone,
+                    iconColor: AppTheme.secondary,
+                    title: 'Auto-Sync SMS',
+                    subtitle: 'Automatically capture payment messages',
+                    value: settings.autoSync,
+                    onChanged: settings.setAutoSync,
+                  ),
+                  Divider(height: 1, color: AppTheme.outlineVariant.withOpacity(0.2)),
+                  _SettingsToggle(
+                    icon: LucideIcons.arrowLeftRight,
+                    iconColor: AppTheme.primary,
+                    title: 'Auto-Reconcile',
+                    subtitle: 'Automatically match payments to invoices',
+                    value: settings.autoReconcile,
+                    onChanged: settings.setAutoReconcile,
+                  ),
+                  Divider(height: 1, color: AppTheme.outlineVariant.withOpacity(0.2)),
+                  _SettingsToggle(
+                    icon: LucideIcons.bell,
+                    iconColor: const Color(0xFF8B5CF6),
+                    title: 'Notifications',
+                    subtitle: 'Get notified about new payments',
+                    value: settings.notifications,
+                    onChanged: settings.setNotifications,
                   ),
                 ],
               ),
