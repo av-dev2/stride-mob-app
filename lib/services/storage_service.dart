@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class StorageService {
   static const _keySiteUrl = 'stride_site_url';
   static const _keyApiToken = 'stride_api_token';
+  static const _keySiteHostname = 'stride_site_hostname';
   static const _keyAutoSync = 'stride_auto_sync';
   static const _keyAutoReconcile = 'stride_auto_reconcile';
   static const _keyNotifications = 'stride_notifications';
@@ -30,6 +31,14 @@ class StorageService {
 
   Future<void> setApiToken(String token) async {
     await _secureStorage.write(key: _keyApiToken, value: token);
+  }
+
+  Future<String?> getSiteHostname() async {
+    return (await _prefs).getString(_keySiteHostname);
+  }
+
+  Future<void> setSiteHostname(String hostname) async {
+    (await _prefs).setString(_keySiteHostname, hostname);
   }
 
   // === Settings ===
