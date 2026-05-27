@@ -18,7 +18,7 @@ class CustomerProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  /// Fetch all customers.
+  /// Fetch all customers from Frappe.
   Future<void> fetchCustomers({String? search}) async {
     _isLoading = true;
     _error = null;
@@ -26,7 +26,8 @@ class CustomerProvider extends ChangeNotifier {
 
     try {
       _customers = await _api.getCustomers(search: search);
-      _totalCount = _customers.length;
+      // Also fetch the true count from Frappe
+      _totalCount = await _api.getCustomerCount();
     } catch (e) {
       _error = e.toString();
     }
