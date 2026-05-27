@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/section_header.dart';
 import '../providers/auth_provider.dart';
+import '../providers/payment_log_provider.dart';
+import '../providers/customer_provider.dart';
 import '../providers/settings_provider.dart';
 
 /// Settings — Frappe connection, sync settings, data management.
@@ -34,6 +36,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _tokenController.dispose();
     _hostnameController.dispose();
     super.dispose();
+  }
+
+  bool _isSyncing = false;
+
+  /// Pull latest data from ERPNext for all providers.
+  Future<void> _syncData() async {
+    setState(() => _isSyncing = true);
+    final paymentProvider = context.read<PaymentLogProvider>();
+    final customerProvider = context.read<CustomerProvider>();
+
+    try {
+      await Future.wait([
+        paymentProvider.fetchCounts(),
+        paymentProvider.fetchLogs(),
+        customerProvider.fetchCustomers(),
+      ]);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Synced: ${customerProvider.totalCount} customers, '
+              '${paymentProvider.totalCount} payment logs',
+            ),
+            backgroundColor: AppTheme.secondary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync error: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
+
+    if (mounted) setState(() => _isSyncing = false);
   }
 
   @override
@@ -152,7 +193,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: ElevatedButton(
                           onPressed: auth.isLoading
                               ? null
-                              : () => auth.saveAndTest(_urlController.text, _tokenController.text),
+                              : () async {
+                                  final success = await auth.saveAndTest(
+                                    _urlController.text,
+                                    _tokenController.text,
+                                  );
+                                  // Auto-sync after successful save
+                                  if (success && mounted) {
+                                    _syncData();
+                                  }
+                                },
                           child: const Text('Save'),
                         ),
                       ),
@@ -228,14 +278,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   _SettingsAction(
                     icon: LucideIcons.refreshCw,
-                    iconColor: AppTheme.primary,
+                    iconColor: AppTheme.secondary,
                     title: 'Sync Now',
-                    subtitle: 'Pull latest data from ERPNext',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Syncing...'), backgroundColor: AppTheme.primary),
-                      );
-                    },
+                    subtitle: _isSyncing
+                        ? 'Pulling data from ERPNext...'
+                        : 'Pull latest data from ERPNext',
+                    isLoading: _isSyncing,
+                    onTap: _isSyncing
+                        ? () {}
+                        : () {
+                            final auth = context.read<AuthProvider>();
+                            if (!auth.isConnected) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Not connected. Configure Frappe connection first.'),
+                                  backgroundColor: AppTheme.error,
+                                ),
+                              );
+                              return;
+                            }
+                            _syncData();
+                          },
                   ),
                   Divider(height: 1, color: AppTheme.outlineVariant.withOpacity(0.2)),
                   _SettingsAction(
@@ -347,6 +410,7 @@ class _SettingsAction extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool isLoading;
 
   const _SettingsAction({
     required this.icon,
@@ -354,6 +418,7 @@ class _SettingsAction extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.isLoading = false,
   });
 
   @override
@@ -370,7 +435,16 @@ class _SettingsAction extends StatelessWidget {
                 color: iconColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, size: 18, color: iconColor),
+              child: isLoading
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: iconColor,
+                      ),
+                    )
+                  : Icon(icon, size: 18, color: iconColor),
             ),
             const SizedBox(width: 12),
             Expanded(
