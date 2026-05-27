@@ -51,6 +51,9 @@ class FrappeApi {
   }
 
   /// Fetch payment logs with optional filters.
+  ///
+  /// Uses `/api/resource/Payment Log` — do NOT pass `doctype` as a query param
+  /// because Frappe extracts it from the URL path.
   Future<List<PaymentLog>> getPaymentLogs({
     Map<String, dynamic>? filters,
     String orderBy = 'posting_date desc',
@@ -58,7 +61,6 @@ class FrappeApi {
     int offset = 0,
   }) async {
     final params = <String, String>{
-      'doctype': 'Payment Log',
       'fields': '["name","posting_date","posting_time","reconciled","paid_amount","payment_method","paid_to","description"]',
       'order_by': orderBy,
       'limit_page_length': '$limit',
@@ -80,6 +82,9 @@ class FrappeApi {
   }
 
   /// Get count of payment logs, optionally filtered by reconciled status.
+  ///
+  /// Uses `/api/method/frappe.client.get_count` — this method DOES require
+  /// `doctype` as a query parameter because it's a generic method endpoint.
   Future<int> getPaymentLogCount({bool? reconciled}) async {
     final filters = <String, dynamic>{};
     if (reconciled != null) {
@@ -105,14 +110,33 @@ class FrappeApi {
     throw Exception('Failed to fetch count: ${response.statusCode}');
   }
 
+  /// Fetch total customer count.
+  Future<int> getCustomerCount() async {
+    final params = <String, String>{
+      'doctype': 'Customer',
+    };
+    final response = await http.get(
+      Uri.parse('$_siteUrl/api/method/frappe.client.get_count').replace(
+        queryParameters: params,
+      ),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return (data['message'] as num?)?.toInt() ?? 0;
+    }
+    throw Exception('Failed to fetch customer count: ${response.statusCode}');
+  }
+
   /// Fetch customers.
+  ///
+  /// Uses `/api/resource/Customer` — doctype comes from the URL path.
   Future<List<Customer>> getCustomers({
     String? search,
     int limit = 50,
     int offset = 0,
   }) async {
     final params = <String, String>{
-      'doctype': 'Customer',
       'fields': '["name","customer_name","customer_type","mobile_no","email_id"]',
       'order_by': 'customer_name asc',
       'limit_page_length': '$limit',
@@ -134,6 +158,8 @@ class FrappeApi {
   }
 
   /// Fetch outstanding sales invoices for a customer.
+  ///
+  /// Uses `/api/resource/Sales Invoice` — doctype comes from the URL path.
   Future<List<SalesInvoice>> getOutstandingSalesInvoices({
     String? customer,
   }) async {
@@ -145,7 +171,6 @@ class FrappeApi {
       filters.add(['customer', '=', customer]);
     }
     final params = <String, String>{
-      'doctype': 'Sales Invoice',
       'fields': '["name","customer_name","due_date","grand_total","outstanding_amount","status"]',
       'filters': json.encode(filters),
       'order_by': 'due_date asc',
